@@ -26,5 +26,6 @@ int read_employees(int fd, struct dbheader_t *dbHeader,
                    struct employee_t **employeesOut);
 int add_empployee(struct dbheader_t *dbHeader, struct employee_t *employees,
                   char *addString);
+void list_employees(struct dbheader_t *dbHeader, struct employee_t *employees);
 
 #endif

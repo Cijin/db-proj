@@ -10,6 +10,22 @@
 #include "../include/common.h"
 #include "../include/parse.h"
 
+void list_employees(struct dbheader_t *dbHeader, struct employee_t *employees) {
+  if (dbHeader->count == 0) {
+    printf("Db is empty. Add an employee using -a\n");
+    return;
+  }
+
+  for (int i = 0; i < dbHeader->count; i++) {
+    printf("Employee: %d\n", i + 1);
+    printf("\tName: %s\n", employees[i].name);
+    printf("\tAddress: %s\n", employees[i].address);
+    printf("\tHours: %d\n", employees[i].hours);
+  }
+
+  return;
+}
+
 int add_empployee(struct dbheader_t *dbHeader, struct employee_t *employees,
                   char *addString) {
   char *name = strtok(addString, ",");
