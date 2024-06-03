@@ -12,8 +12,19 @@ struct dbheader_t {
   unsigned int filesize;
 };
 
+struct employee_t {
+  char name[256];
+  char address[256];
+  unsigned int hours;
+};
+
 int create_db_header(struct dbheader_t **headerOut);
 int verify_db_header(int fd, struct dbheader_t **headerOut);
-void save_db(int fd, struct dbheader_t *dbHeader);
+void save_db(int fd, struct dbheader_t *dbHeader, struct employee_t *employees);
+
+int read_employees(int fd, struct dbheader_t *dbHeader,
+                   struct employee_t **employeesOut);
+int add_empployee(struct dbheader_t *dbHeader, struct employee_t *employees,
+                  char *addString);
 
 #endif

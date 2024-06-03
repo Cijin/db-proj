@@ -1,6 +1,8 @@
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -8,22 +10,77 @@
 #include "../include/common.h"
 #include "../include/parse.h"
 
-void save_db(int fd, struct dbheader_t *dbHeader) {
+int add_empployee(struct dbheader_t *dbHeader, struct employee_t *employees,
+                  char *addString) {
+  char *name = strtok(addString, ",");
+  char *address = strtok(NULL, ",");
+  int hours = strtol(strtok(NULL, ","), NULL, 10);
+
+  strncpy(employees[dbHeader->count - 1].name, name,
+          sizeof(employees[dbHeader->count - 1].name));
+  strncpy(employees[dbHeader->count - 1].address, address,
+          sizeof(employees[dbHeader->count - 1].address));
+  employees[dbHeader->count - 1].hours = hours;
+
+  return STATUS_SUCCESS;
+}
+
+int read_employees(int fd, struct dbheader_t *dbHeader,
+                   struct employee_t **employeesOut) {
+
+  if (fd == -1) {
+    printf("Error: verify_db_header: invlalid fd\n");
+    return STATUS_ERROR;
+  }
+
+  int employeesCount = dbHeader->count;
+
+  struct employee_t *employees =
+      calloc(employeesCount, sizeof(struct employee_t));
+  if (employees == NULL) {
+    perror("read_employees: Malloc");
+    return STATUS_ERROR;
+  }
+
+  read(fd, employees, sizeof(struct employee_t) * employeesCount);
+
+  for (int i = 0; i < employeesCount; i++) {
+    employees[i].hours = ntohl(employees[i].hours);
+  }
+
+  *employeesOut = employees;
+
+  return STATUS_SUCCESS;
+}
+
+void save_db(int fd, struct dbheader_t *dbHeader,
+             struct employee_t *employees) {
   if (fd == -1) {
     printf("Error: save_db: invlalid fd\n");
     return;
   }
 
+  int count = dbHeader->count;
+
   dbHeader->magic = htonl(dbHeader->magic);
-  dbHeader->filesize = htonl(dbHeader->filesize);
+  dbHeader->filesize =
+      htonl(sizeof(struct dbheader_t) + sizeof(struct employee_t) * count);
   dbHeader->version = htons(dbHeader->version);
   dbHeader->count = htons(dbHeader->count);
 
   lseek(fd, 0, SEEK_SET);
 
   if (write(fd, dbHeader, sizeof(struct dbheader_t)) == -1) {
-    perror("write");
+    perror("write header");
     return;
+  }
+
+  for (int i = 0; i < count; i++) {
+    employees[i].hours = htonl(employees[i].hours);
+    if (write(fd, &employees[i], sizeof(struct employee_t)) == -1) {
+      perror("write employee");
+      return;
+    }
   }
 
   return;
