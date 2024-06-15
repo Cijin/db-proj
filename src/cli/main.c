@@ -1,11 +1,11 @@
-#include <getopt.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-#include "../include/common.h"
-#include "../include/file.h"
-#include "../include/parse.h"
+#include "../../include/common.h"
+#include "../../include/file.h"
+#include "../../include/parse.h"
 
 void print_usage(char *argv[]) {
   printf("Usage: %s -n -f <database file>\n", argv[0]);
@@ -13,19 +13,22 @@ void print_usage(char *argv[]) {
   printf("\t -f - (required) path to database file\n");
   printf("\t -a - add an employee in the format \"name, address, hours\"\n");
   printf("\t -l - list current list of employees");
+  printf("\t -p - port to run the server on");
 }
 
 int main(int argc, char *argv[]) {
   int c = 0;
   int dbfd = -1;
+  int port;
   struct dbheader_t *dbHeader = NULL;
   struct employee_t *employees = NULL;
   bool newfile = false;
   bool listEmployees = false;
   char *filepath = NULL;
+  char *portarg = NULL;
   char *addString = NULL;
 
-  while ((c = getopt(argc, argv, "nf:a:l")) != -1) {
+  while ((c = getopt(argc, argv, "nlf:a:p:")) != -1) {
     switch (c) {
     case 'n':
       newfile = true;
@@ -41,6 +44,14 @@ int main(int argc, char *argv[]) {
 
     case 'a':
       addString = optarg;
+      break;
+
+    case 'p':
+      portarg = optarg;
+      port = atoi(portarg);
+      if (port == 0) {
+        printf("Bad port: %s\n", portarg);
+      }
       break;
 
     case '?':

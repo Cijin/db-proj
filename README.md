@@ -7,6 +7,11 @@ The database is just a file with a simple header to verify validity of data. Thi
 I still would continue to use Go for all my programming needs but I've found a new appreciation for C.
 If anything, it's helped me understand the hardware better, in turn making me a better programmer. I hope.
 
+## Make
+
+Make is awesome. It's the bulid system for the project. Simple run `make` to get everything up and ready. It builds 
+all the objects and ensures both the server and the client are up and running on the port you have specified.
+
 ## Shoutout to Low Level Learning
 
 This project and my understanding of C would have taken me years to get to this point, if I were 
