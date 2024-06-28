@@ -1,11 +1,11 @@
-TARGET_CLI = bin/cli
+TARGET_CLIENT = bin/client
 TARGET_SRV = bin/server
 
 SRC_SRV = $(wildcard src/server/*c)
 OBJ_SRV = $(SRC_SRV:src/server/%.c=obj/server/%.o) 
 
-SRC_CLI = $(wildcard src/cli/*c)
-OBJ_CLI = $(SRC_CLI:src/cli/%.c=obj/cli/%.o) 
+SRC_CLIENT = $(wildcard src/client/*c)
+OBJ_CLIENT = $(SRC_CLI:src/client/%.c=obj/client/%.o) 
 
 
 run: clean default
@@ -13,23 +13,22 @@ run: clean default
 	./$(TARGET_CLI) 127.0.0.1
 	kill -9 $$(pidof dbserver)
 
-
-default: $(TARGET_SRV) $(TARGET_CLI)
-
 clean:
 	rm -f obj/server/*.o
-	rm -f obj/cli/*.o
+	rm -f obj/client/*.o
 	rm -f bin/*
 	rm -f *.db
 
-$(TARGET_SRV): $(OBJ_CLI)
+default: $(TARGET_SRV) $(TARGET_CLI)
+
+$(TARGET_SRV): $(OBJ_CLIENT)
 	gcc -o $@ $?
 
-$(OBJ_SRV): obj/server/%.o: src/serer/%.c
+$(OBJ_SRV): obj/server/%.o: src/server/%.c
 	gcc -c $< -o $@ -Iinclude
 
-$(TARGET_CLI): $(OBJ_CLI)
+$(TARGET_CLIENT): $(OBJ_CLIENT)
 	gcc -o $@ $?
 
-$(OBJ_CLI): obj/cli/%.o: src/cli/%.c
+$(OBJ_CLIENT): obj/client/%.o: src/client/%.c
 	gcc -c $< -o $@ -Iinclude

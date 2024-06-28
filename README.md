@@ -15,4 +15,6 @@ all the objects and ensures both the server and the client are up and running on
 ## Shoutout to Low Level Learning
 
 This project and my understanding of C would have taken me years to get to this point, if I were 
-to do it on my own. You can find all things Low level [here](https://www.youtube.com/@LowLevelLearning).
+to do it on my own. Also, for inspiring me to dive deeper into programming.
+
+You can find all things Low level learning [here](https://www.youtube.com/@LowLevelLearning).
