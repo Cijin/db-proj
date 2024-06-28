@@ -1,13 +1,16 @@
 #include <netdb.h>
+#include <poll.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 
 #include "../../include/common.h"
 #include "../../include/server.h"
 
-int poll_server(char *port) {
+int get_listener_socket(char *port) {
   int addrInfoRes, listenfd;
   int yes = 1;
   struct addrinfo hints, *serverInfo, *p;
@@ -50,7 +53,30 @@ int poll_server(char *port) {
     return STATUS_ERROR;
   }
 
-  // poll and accept connections
+  return listenfd;
+}
 
+int poll_server(char *port) {
+  int remotefd, listenfd, fdCount;
+  struct sockaddr_storage remoteAddr;
+  socklen_t remoteAddrLen;
+
+  struct pollfd *pfds = calloc(FD_SIZE, sizeof(struct pollfd));
+  if (pfds == NULL) {
+    perror("calloc");
+    return STATUS_ERROR;
+  }
+
+  listenfd = get_listener_socket(port);
+  if (listenfd == STATUS_ERROR) {
+    return STATUS_ERROR;
+  }
+
+  pfds[0].fd = listenfd;
+  pfds[0].events = POLLIN;
+
+  fdCount = 1;
+
+  // get socket
   return STATUS_SUCCESS;
 }
