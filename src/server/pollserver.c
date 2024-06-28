@@ -6,6 +6,7 @@
 #include <sys/poll.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <unistd.h>
 
 #include "../../include/common.h"
 #include "../../include/server.h"
@@ -72,7 +73,7 @@ int get_listener_socket(char *port) {
   }
 
   if (p == NULL) {
-    printf("Server failed to bind socket");
+    printf("Failed to bind socket");
     return STATUS_ERROR;
   }
 
@@ -86,20 +87,20 @@ int get_listener_socket(char *port) {
   return listenfd;
 }
 
-int poll_server(char *port) {
-  int remotefd, listenfd, fdCount;
+void poll_server(char *port) {
+  int remotefd, listenfd, fdCount, freeSlot;
   struct sockaddr_storage remoteAddr;
   socklen_t remoteAddrLen;
 
-  struct pollfd *pfds = calloc(FD_SIZE, sizeof(struct pollfd));
+  struct pollfd *pfds = calloc(MAX_CLIENTS, sizeof(struct pollfd));
   if (pfds == NULL) {
     perror("calloc");
-    return STATUS_ERROR;
+    exit(STATUS_ERROR);
   }
 
   listenfd = get_listener_socket(port);
   if (listenfd == STATUS_ERROR) {
-    return STATUS_ERROR;
+    exit(STATUS_ERROR);
   }
 
   pfds[0].fd = listenfd;
@@ -107,6 +108,77 @@ int poll_server(char *port) {
 
   fdCount = 1;
 
-  // get socket
-  return STATUS_SUCCESS;
+  init_clients();
+
+  while (1) {
+    // update fd set to include clients that are connected
+    int ii = 1; // offset by 1 for listenfd
+    for (int i = 0; i < MAX_CLIENTS; i++) {
+      if (clients[i].fd != -1) {
+        pfds[ii].fd = clients[i].fd;
+        pfds[ii].events = POLLIN;
+      }
+    }
+
+    // keep track of clients to serve
+    int n_events = poll(pfds, fdCount, -1);
+    if (n_events == -1) {
+      perror("poll");
+      exit(STATUS_ERROR);
+    }
+
+    // check if any of the returned events (revents) have data
+    // to read, i.e. the POLLIN bit is set
+    if (pfds[0].revents & POLLIN) {
+      if ((remotefd = accept(listenfd, (struct sockaddr *)&remoteAddr,
+                             &remoteAddrLen)) == -1) {
+        perror("accept");
+        continue;
+      }
+
+      freeSlot = find_free_slot();
+      if (freeSlot == -1) {
+        printf("Server full: closing new connection\n");
+        close(remotefd);
+      } else {
+        clients[freeSlot].fd = remotefd;
+        clients[freeSlot].state = STATE_CONNECTED;
+
+        fdCount++;
+        printf("Slot %d assigned to clientfd %d", freeSlot, remotefd);
+      }
+
+      n_events--;
+    }
+
+    // skipping socket fd fds[0]
+    for (int i = 1; i <= fdCount && n_events > 0; i++) {
+      if (pfds[i].revents & POLLIN) {
+        n_events--;
+
+        int fd = pfds[i].fd;
+        int slot = find_free_slot_by_fd(fd);
+
+        ssize_t bytes_read =
+            read(fd, clients[slot].buffer, sizeof(clients[slot].buffer));
+        if (bytes_read <= 0) {
+          // closed connection
+          if (close(fd) == -1) {
+            perror("close");
+            if (slot == -1) {
+              printf("Attempted to close non-existent fd\n");
+            } else {
+              clients[slot].fd = -1;
+              clients[slot].state = STATE_DISCONNECTED;
+              fdCount--;
+
+              printf("Client disconnected or error\n");
+            }
+          }
+        } else {
+          printf("Recieved from client %d: %s\n", fd, clients[slot].buffer);
+        }
+      }
+    }
+  }
 }
