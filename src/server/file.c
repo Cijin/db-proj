@@ -4,8 +4,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../include/common.h"
-#include "../include/file.h"
+#include "../../include/common.h"
+#include "../../include/file.h"
 
 int open_db_file(char *filename) {
   int fd = open(filename, O_RDWR, 0644);

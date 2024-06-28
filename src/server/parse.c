@@ -7,8 +7,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-#include "../include/common.h"
-#include "../include/parse.h"
+#include "../../include/common.h"
+#include "../../include/parse.h"
 
 void list_employees(struct dbheader_t *dbHeader, struct employee_t *employees) {
   if (dbHeader->count == 0) {
