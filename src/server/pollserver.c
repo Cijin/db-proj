@@ -10,6 +10,36 @@
 #include "../../include/common.h"
 #include "../../include/server.h"
 
+client_t clients[MAX_CLIENTS];
+
+void init_clients() {
+  for (int i = 0; i < MAX_CLIENTS; i++) {
+    clients[i].fd = -1;
+    clients[i].state = STATE_NEW;
+    memset(&clients[i].buffer, '\0', BUF_SIZE);
+  }
+}
+
+int find_free_slot() {
+  for (int i = 0; i < MAX_CLIENTS; i++) {
+    if (clients[i].fd == -1) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+int find_free_slot_by_fd(int fd) {
+  for (int i = 0; i < MAX_CLIENTS; i++) {
+    if (clients[i].fd == fd) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
 int get_listener_socket(char *port) {
   int addrInfoRes, listenfd;
   int yes = 1;
