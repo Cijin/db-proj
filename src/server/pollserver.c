@@ -161,6 +161,7 @@ void poll_server(char *port) {
 
         ssize_t bytes_read =
             read(fd, clients[slot].buffer, sizeof(clients[slot].buffer));
+
         if (bytes_read <= 0) {
           // closed connection
           if (close(fd) == -1) {
@@ -176,6 +177,9 @@ void poll_server(char *port) {
             }
           }
         } else {
+          // TODO:
+          // check header
+          // write info back to client
           printf("Recieved from client %d: %s\n", fd, clients[slot].buffer);
         }
       }
